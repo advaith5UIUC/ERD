@@ -1,0 +1,97 @@
+erdiagram RC_Models_Company
+
+notation=crowsfoot
+
+// Strong Entities
+entity Customer {
+    Cust_ID: INTEGER key
+    Cust_Name: VARCHAR(100)
+    email: VARCHAR(100)
+    phone: VARCHAR(20)
+}
+
+entity Product {
+    Product_ID: INTEGER key
+    Product_Type: VARCHAR(50)
+    Product_QOH: INTEGER
+}
+
+entity Promotion {
+    Promotion_ID: INTEGER key
+    Source: VARCHAR(100)
+    Date: DATE
+}
+
+entity Invoice {
+    INV_ID: INTEGER key
+    INV_Date: DATE
+    Payment_Status: VARCHAR(20)
+    Shipping_Charge: DECIMAL(10,2)
+    Total_Amount: DECIMAL(10,2)
+}
+
+entity Manufacturer {
+    Manufacturer_ID: INTEGER key
+    Name: VARCHAR(100)
+    Website: VARCHAR(200)
+    Country: VARCHAR(50)
+}
+
+// Bridge/Junction Entities
+entity Line {
+    Line_ID: INTEGER key
+    INV_ID: INTEGER
+    Product_ID: INTEGER
+    Quantity: INTEGER
+    Unit_Price: DECIMAL(10,2)
+    Total_Cost: DECIMAL(10,2)
+}
+
+entity Distribution {
+    Distribution_ID: INTEGER key
+    Cust_ID: INTEGER
+    Promotion_ID: INTEGER
+    Distribution_Date: DATE
+}
+
+entity Return {
+    Return_ID: INTEGER key
+    Line_ID: INTEGER
+    Return_Date: DATE
+    Return_Reason: VARCHAR(200)
+}
+
+// Business Rule: Each customer should have at least one invoice, each invoice must belong to one customer
+relationship CustomerInvoice {
+    Customer[1 | "customer"] -> Invoice[0..N | "invoice"]
+}
+
+// Business Rule: Each invoice must include at least one or many lines, each line must belong to only one invoice
+relationship InvoiceLine {
+    Invoice[1 | "invoice"] -> Line[0..N | "line_item"]
+}
+
+// Business Rule: Each line generates zero to 1 return, each return must belong to only one line
+relationship LineReturn {
+    Line[1 | "original_line"] -> Return[0..1 | "returned_item"]
+}
+
+// Business Rule: Each line must include only one product, each product may appear in zero or many lines
+relationship LineProduct {
+    Line[0..N | "line_item"] -> Product[1 | "ordered_product"]
+}
+
+// Business Rule: Each manufacturer must supply at least one or many products, each product can be only supplied by at least one manufacturer
+relationship ManufacturerProduct {
+    Manufacturer[1..N | "supplier"] -> Product[1..N | "supplied_product"]
+}
+
+// Business Rule: Each customer can receive zero to many Distributions, each distribution must be associated with only one Customer
+relationship CustomerDistribution {
+    Customer[1 | "recipient"] -> Distribution[0..N | "sent_promotion"]
+}
+
+// Business Rule: Each promotion must be distributed at least one and may have many distributions. Each distribution must belong to only one promotion
+relationship PromotionDistribution {
+    Promotion[1 | "promotional_campaign"] -> Distribution[0..N | "distribution_instance"]
+}
